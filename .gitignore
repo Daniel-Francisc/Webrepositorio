@@ -1,2 +1,3 @@
-pyGames/Jogo.py/sala/__pycache__/Tela.cpython-311.pyc
+__pycache__/
+*.pyc
 .venv/*

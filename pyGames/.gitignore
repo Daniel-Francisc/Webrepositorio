@@ -1,2 +1,3 @@
+__pycache__/
+*.pyc
 .venv/*
-sala/__pycache__/Tela.cpython-311.pyc
