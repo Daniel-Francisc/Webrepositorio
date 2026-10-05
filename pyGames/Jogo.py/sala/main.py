@@ -1,4 +1,6 @@
-from Tela import Tela 
+from gameplay import Gameplay
 
-tela = Tela(debug=False) 
-tela.executar()
+jogo = Gameplay()
+
+jogo.executar()
+jogo.janela.mainloop()

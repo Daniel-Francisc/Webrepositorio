@@ -45,4 +45,4 @@ class Tela:
         self.desenhar()
 
         self.janela.after(16, self.executar) 
-        self.janela.mainloop()
+        # self.janela.mainloop()
