@@ -12,9 +12,19 @@ class Foguete:
         self.massa = 1
         self.energia = 0
 
-    def atualizar(self, largura_tela, altura_tela):
-        self.x += self.velocidade_x
-        self.y += self.velocidade_y
+    def atualizar(self, input, dT, largura_tela, altura_tela):
+
+        if input.pressionada("Left"):
+            self.x -= 200 * dT
+
+        if input.pressionada("Right"):
+            self.x += 200 * dT
+
+        if input.pressionada("Up"):
+            self.y -= 200 * dT
+
+        if input.pressionada("Down"):
+            self.y += 200 * dT
 
         # Saiu pela esquerda
         if self.x + self.largura < 0:

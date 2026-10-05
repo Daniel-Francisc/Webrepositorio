@@ -1,6 +1,8 @@
 from .Tela import Tela
 from .hud import HUD
 from objetos.foguete import Foguete
+from objetos.localPouso import LocalPouso
+from lib.Input import Input
 
 
 class Gameplay(Tela):
@@ -15,34 +17,19 @@ class Gameplay(Tela):
             self.IsLargura // 2,
             self.IsAltura // 2
         )
-
-        self.teclas = set()
-
+        
+        self.local_pouso = LocalPouso(
+            self.IsLargura // 2 - 75,
+            self.IsAltura - 100
+        )
+        
+        self.input = Input(self.janela)
         self.hud = HUD(self.canvas)
 
-        self.janela.bind("<KeyPress>", self.tecla_pressionada)
-        self.janela.bind("<KeyRelease>", self.tecla_liberada)
-
-    def tecla_pressionada(self, evento):
-        self.teclas.add(evento.keysym)
-
-    def tecla_liberada(self, evento):
-        self.teclas.discard(evento.keysym)
-
     def atualizar(self):
-        if "Left" in self.teclas:
-            self.foguete.x -= self.foguete.velocidade_x
-
-        if "Right" in self.teclas:
-            self.foguete.x += self.foguete.velocidade_x
-
-        if "Up" in self.teclas:
-            self.foguete.y -= self.foguete.velocidade_y
-
-        if "Down" in self.teclas:
-            self.foguete.y += self.foguete.velocidade_y
-
         self.foguete.atualizar(
+            self.input,
+            1 / 60,
             self.IsLargura,
             self.IsAltura
         )
@@ -67,4 +54,12 @@ class Gameplay(Tela):
             fill="white"
         )
 
+        self.canvas.create_rectangle(
+            self.local_pouso.x,
+            self.local_pouso.y,
+            self.local_pouso.x + self.local_pouso.largura,
+            self.local_pouso.y + self.local_pouso.altura,
+            fill="gray"
+        )
+        
         self.hud.desenhar()
