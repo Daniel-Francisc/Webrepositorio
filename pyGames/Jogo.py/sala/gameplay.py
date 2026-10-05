@@ -1,6 +1,6 @@
 from Tela import Tela
 from hud import HUD
-
+from foguete import Foguete
 
 class Gameplay(Tela):
     def __init__(self, altura=0, largura=0, titulo="Gameplay"):
@@ -10,15 +10,10 @@ class Gameplay(Tela):
             largura=largura
         )
 
-        self.x = self.IsLargura // 2
-        self.y = self.IsAltura // 2
-
-        self.velocidade_x = 0
-        self.velocidade_y = 0
-
-        self.massa = 1
-        self.energia = 0
-
+        self.foguete = Foguete(
+            self.IsLargura // 2,
+            self.IsAltura // 2
+        )
         self.teclas = set()
 
         self.hud = HUD(self.canvas)
@@ -46,12 +41,12 @@ class Gameplay(Tela):
             self.y += self.velocidade_y
 
         self.hud.atualizar({
-            "x": self.x,
-            "y": self.y,
-            "vx": self.velocidade_x,
-            "vy": self.velocidade_y,
-            "massa": self.massa,
-            "energia": self.energia
+            "x": self.foguete.x,
+            "y": self.foguete.y,
+            "vx": self.foguete.velocidade_x,
+            "vy": self.foguete.velocidade_y,
+            "massa": self.foguete.massa,
+            "energia": self.foguete.energia
         })
 
     def desenhar(self):
