@@ -1,6 +1,7 @@
-from Tela import Tela
-from hud import HUD
-from foguete import Foguete
+from .Tela import Tela
+from .hud import HUD
+from objetos.foguete import Foguete
+
 
 class Gameplay(Tela):
     def __init__(self, altura=0, largura=0, titulo="Gameplay"):
@@ -14,6 +15,7 @@ class Gameplay(Tela):
             self.IsLargura // 2,
             self.IsAltura // 2
         )
+
         self.teclas = set()
 
         self.hud = HUD(self.canvas)
@@ -29,16 +31,21 @@ class Gameplay(Tela):
 
     def atualizar(self):
         if "Left" in self.teclas:
-            self.x -= self.velocidade_x
+            self.foguete.x -= self.foguete.velocidade_x
 
         if "Right" in self.teclas:
-            self.x += self.velocidade_x
+            self.foguete.x += self.foguete.velocidade_x
 
         if "Up" in self.teclas:
-            self.y -= self.velocidade_y
+            self.foguete.y -= self.foguete.velocidade_y
 
         if "Down" in self.teclas:
-            self.y += self.velocidade_y
+            self.foguete.y += self.foguete.velocidade_y
+
+        self.foguete.atualizar(
+            self.IsLargura,
+            self.IsAltura
+        )
 
         self.hud.atualizar({
             "x": self.foguete.x,
@@ -53,10 +60,10 @@ class Gameplay(Tela):
         super().desenhar()
 
         self.canvas.create_rectangle(
-            self.x - 25,
-            self.y - 25,
-            self.x + 25,
-            self.y + 25,
+            self.foguete.x,
+            self.foguete.y,
+            self.foguete.x + self.foguete.largura,
+            self.foguete.y + self.foguete.altura,
             fill="white"
         )
 
