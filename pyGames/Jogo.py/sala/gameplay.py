@@ -45,7 +45,8 @@ class Gameplay(Tela):
         while len(coletaveis) < quantidade:
             x, y = Coletavel.posicao_aleatoria(
                 self.IsLargura,
-                self.IsAltura
+                self.IsAltura,
+                self.local_pouso.y
             )
 
             if any(
