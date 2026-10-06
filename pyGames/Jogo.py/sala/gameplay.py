@@ -17,12 +17,12 @@ class Gameplay(Tela):
             self.IsLargura // 2,
             self.IsAltura // 2
         )
-        
+
         self.local_pouso = LocalPouso(
             self.IsLargura // 2 - 75,
             self.IsAltura - 100
         )
-        
+
         self.input = Input(self.janela)
         self.hud = HUD(self.canvas)
 
@@ -31,7 +31,8 @@ class Gameplay(Tela):
             self.input,
             1 / 60,
             self.IsLargura,
-            self.IsAltura
+            self.IsAltura,
+            self.local_pouso
         )
 
         self.hud.atualizar({
@@ -61,5 +62,5 @@ class Gameplay(Tela):
             self.local_pouso.y + self.local_pouso.altura,
             fill="gray"
         )
-        
+
         self.hud.desenhar()

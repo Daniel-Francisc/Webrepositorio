@@ -1,3 +1,6 @@
+from lib.Colisao import place_meeting
+
+
 class Foguete:
     def __init__(self, x, y):
         self.x = x
@@ -12,7 +15,9 @@ class Foguete:
         self.massa = 1
         self.energia = 0
 
-    def atualizar(self, input, dT, largura_tela, altura_tela):
+        self.colidindo = False
+
+    def atualizar(self, input, dT, largura_tela, altura_tela, objeto_colisao=None):
 
         if input.pressionada("Left"):
             self.x -= 200 * dT
@@ -41,3 +46,18 @@ class Foguete:
         # Saiu pela parte inferior
         elif self.y > altura_tela:
             self.y = -self.altura
+
+        # Verifica colisão com o objeto informado
+        if objeto_colisao is not None:
+            self.colidindo = place_meeting(
+                self,
+                self.x,
+                self.y,
+                objeto_colisao
+            )
+
+            if self.colidindo:
+                self.y = objeto_colisao.y - self.altura
+                self.velocidade_y = 0
+        else:
+            self.colidindo = False
