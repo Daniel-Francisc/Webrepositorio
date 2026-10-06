@@ -11,7 +11,8 @@ class HUD:
             "vx": 0,
             "vy": 0,
             "massa": 0,
-            "energia": 0
+            "energia": 0,
+            "pontos": 0
         }
 
         self.texto = None
@@ -27,7 +28,8 @@ class HUD:
             f"Vx: {self.dados['vx']:.2f}\n"
             f"Vy: {self.dados['vy']:.2f}\n"
             f"Massa: {self.dados['massa']:.2f} kg\n"
-            f"Energia: {self.dados['energia']:.2f} J"
+            f"Energia: {self.dados['energia']:.2f} J\n"
+            f"Pontos: {self.dados['pontos']}"
         )
 
         if self.texto is None:

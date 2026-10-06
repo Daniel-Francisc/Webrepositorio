@@ -14,6 +14,7 @@ class Foguete:
 
         self.massa = 1
         self.energia = 0
+        self.pontos = 0
 
         self.colidindo = False
 
@@ -29,7 +30,7 @@ class Foguete:
         ):
             self.pontos += coletavel.valor
             coletavel.destruido = True
-            
+
     def atualizar(self, input, dT, largura_tela, altura_tela, local_pouso=None):
 
         x_anterior = self.x
@@ -74,4 +75,3 @@ class Foguete:
                 self.x = x_anterior
                 self.y = y_anterior
                 self.colidindo = True
-        
