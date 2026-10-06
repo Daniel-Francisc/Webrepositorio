@@ -22,10 +22,12 @@ class Gameplay(Tela):
 
         largura_plataforma = 400
         altura_plataforma = 25
-        x_plataforma, y_plataforma = self._posicao_aleatoria(
-            largura_plataforma,
-            altura_plataforma
+
+        x_plataforma = random.randint(
+            0,
+            self.IsLargura - largura_plataforma
         )
+        y_plataforma = self.IsAltura - altura_plataforma
 
         self.local_pouso = LocalPouso(
             x_plataforma,
@@ -34,14 +36,42 @@ class Gameplay(Tela):
             altura_plataforma
         )
 
-        self.coletaveis = [
-            Coletavel(*self._posicao_aleatoria(25, 25)),
-            Coletavel(*self._posicao_aleatoria(25, 25)),
-            Coletavel(*self._posicao_aleatoria(25, 25))
-        ]
-
+        self.coletaveis = self._criar_coletaveis(3)
         self.input = Input(self.janela)
         self.hud = HUD(self.canvas)
+
+    def _posicao_aleatoria(self, largura, altura):
+        limite_x = self.IsLargura - largura
+        limite_y = self.IsAltura - altura
+
+        if limite_x < 0 or limite_y < 0:
+            raise ValueError(
+                "O objeto é maior que a área disponível da tela."
+            )
+
+        return (
+            random.randint(0, limite_x),
+            random.randint(0, limite_y)
+        )
+
+    def _criar_coletaveis(self, quantidade):
+        coletaveis = []
+
+        while len(coletaveis) < quantidade:
+            x, y = self._posicao_aleatoria(25, 25)
+
+            if any(
+                x < coletavel.x + coletavel.largura
+                and x + 25 > coletavel.x
+                and y < coletavel.y + coletavel.altura
+                and y + 25 > coletavel.y
+                for coletavel in coletaveis
+            ):
+                continue
+
+            coletaveis.append(Coletavel(x, y))
+
+        return coletaveis
 
     def _posicao_aleatoria(self, largura, altura):
         x = random.randint(0, self.IsLargura - largura)
