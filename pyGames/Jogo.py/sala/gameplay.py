@@ -1,4 +1,5 @@
 from .Tela import Tela
+import random
 from .hud import HUD
 from objetos.foguete import Foguete
 from objetos.localPouso import LocalPouso
@@ -19,19 +20,33 @@ class Gameplay(Tela):
             self.IsAltura // 2
         )
 
+        largura_plataforma = 400
+        altura_plataforma = 25
+        x_plataforma, y_plataforma = self._posicao_aleatoria(
+            largura_plataforma,
+            altura_plataforma
+        )
+
         self.local_pouso = LocalPouso(
-            self.IsLargura // 2 - 75,
-            self.IsAltura - 100
+            x_plataforma,
+            y_plataforma,
+            largura_plataforma,
+            altura_plataforma
         )
 
         self.coletaveis = [
-            Coletavel(200, 200),
-            Coletavel(500, 300),
-            Coletavel(800, 200)
+            Coletavel(*self._posicao_aleatoria(25, 25)),
+            Coletavel(*self._posicao_aleatoria(25, 25)),
+            Coletavel(*self._posicao_aleatoria(25, 25))
         ]
 
         self.input = Input(self.janela)
         self.hud = HUD(self.canvas)
+
+    def _posicao_aleatoria(self, largura, altura):
+        x = random.randint(0, self.IsLargura - largura)
+        y = random.randint(0, self.IsAltura - altura)
+        return x, y
 
     def atualizar(self):
         self.foguete.atualizar(
