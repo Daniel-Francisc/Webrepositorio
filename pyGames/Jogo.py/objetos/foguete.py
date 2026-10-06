@@ -1,7 +1,14 @@
+from pathlib import Path
+
+import tkinter as tk
+
 from lib.Colisao import place_meeting
 
 
 class Foguete:
+    GRAVIDADE = 9.8
+    PIXELS_POR_METRO = 50
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -17,6 +24,18 @@ class Foguete:
         self.pontos = 0
 
         self.colidindo = False
+        self.sprite = None
+
+    def carregar_sprite(self, janela, caminho):
+        caminho = Path(caminho)
+
+        if not caminho.exists():
+            return
+
+        self.sprite = tk.PhotoImage(
+            master=janela,
+            file=str(caminho)
+        )
 
     def verificar_coleta(self, coletavel):
         if coletavel.destruido:
@@ -32,7 +51,6 @@ class Foguete:
             coletavel.destruido = True
 
     def atualizar(self, input, dT, largura_tela, altura_tela, local_pouso=None):
-
         x_anterior = self.x
         y_anterior = self.y
 
@@ -47,6 +65,14 @@ class Foguete:
 
         if input.pressionada("Down"):
             self.y += 200 * dT
+
+        self.velocidade_y += (
+            self.GRAVIDADE
+            * self.PIXELS_POR_METRO
+            * dT
+        )
+
+        self.y += self.velocidade_y * dT
 
         # Wrap horizontal
         if self.x + self.largura < 0:
@@ -65,7 +91,6 @@ class Foguete:
         self.colidindo = False
 
         if local_pouso is not None:
-
             if place_meeting(
                 self,
                 self.x,
@@ -74,4 +99,5 @@ class Foguete:
             ):
                 self.x = x_anterior
                 self.y = y_anterior
+                self.velocidade_y = 0
                 self.colidindo = True
