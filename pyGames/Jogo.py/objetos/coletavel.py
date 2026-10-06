@@ -13,13 +13,22 @@ class Coletavel:
         self.destruido = False
 
     @staticmethod
-    def posicao_aleatoria(largura_tela, altura_tela):
+    def posicao_aleatoria(
+        largura_tela,
+        altura_tela,
+        limite_inferior=None,
+        margem=50
+    ):
         limite_x = largura_tela - 25
-        limite_y = altura_tela - 25
+        limite_y = (
+            limite_inferior - margem - 25
+            if limite_inferior is not None
+            else altura_tela - 25
+        )
 
         if limite_x < 0 or limite_y < 0:
             raise ValueError(
-                "O objeto é maior que a área disponível da tela."
+                "O objeto é maior que a área disponível para nascimento."
             )
 
         return (
