@@ -21,7 +21,7 @@ class Gameplay(Tela):
             self.IsLargura,
             largura_plataforma
         )
-        y_plataforma = self.IsAltura - altura_plataforma - 20
+        y_plataforma = self.IsAltura - altura_plataforma - 100
 
         self.local_pouso = LocalPouso(
             x_plataforma,
