@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import tkinter as tk
 
 from lib.Colisao import place_meeting
@@ -27,14 +25,9 @@ class Foguete:
         self.sprite = None
 
     def carregar_sprite(self, janela, caminho):
-        caminho = Path(caminho)
-
-        if not caminho.exists():
-            return
-
         self.sprite = tk.PhotoImage(
             master=janela,
-            file=str(caminho)
+            file=caminho
         )
 
     def verificar_coleta(self, coletavel):
