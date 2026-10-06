@@ -17,7 +17,23 @@ class Foguete:
 
         self.colidindo = False
 
-    def atualizar(self, input, dT, largura_tela, altura_tela, objeto_colisao=None):
+    def verificar_coleta(self, coletavel):
+        if coletavel.destruido:
+            return
+
+        if place_meeting(
+            self,
+            self.x,
+            self.y,
+            coletavel
+        ):
+            self.pontos += coletavel.valor
+            coletavel.destruido = True
+            
+    def atualizar(self, input, dT, largura_tela, altura_tela, local_pouso=None):
+
+        x_anterior = self.x
+        y_anterior = self.y
 
         if input.pressionada("Left"):
             self.x -= 200 * dT
@@ -31,33 +47,31 @@ class Foguete:
         if input.pressionada("Down"):
             self.y += 200 * dT
 
-        # Saiu pela esquerda
+        # Wrap horizontal
         if self.x + self.largura < 0:
             self.x = largura_tela
 
-        # Saiu pela direita
         elif self.x > largura_tela:
             self.x = -self.largura
 
-        # Saiu pelo topo
+        # Wrap vertical
         if self.y + self.altura < 0:
             self.y = altura_tela
 
-        # Saiu pela parte inferior
         elif self.y > altura_tela:
             self.y = -self.altura
 
-        # Verifica colisão com o objeto informado
-        if objeto_colisao is not None:
-            self.colidindo = place_meeting(
+        self.colidindo = False
+
+        if local_pouso is not None:
+
+            if place_meeting(
                 self,
                 self.x,
                 self.y,
-                objeto_colisao
-            )
-
-            if self.colidindo:
-                self.y = objeto_colisao.y - self.altura
-                self.velocidade_y = 0
-        else:
-            self.colidindo = False
+                local_pouso
+            ):
+                self.x = x_anterior
+                self.y = y_anterior
+                self.colidindo = True
+        
