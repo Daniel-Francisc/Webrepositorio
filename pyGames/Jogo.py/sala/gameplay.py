@@ -1,5 +1,4 @@
 from .Tela import Tela
-import random
 from .hud import HUD
 from objetos.foguete import Foguete
 from objetos.localPouso import LocalPouso
@@ -23,11 +22,11 @@ class Gameplay(Tela):
         largura_plataforma = 400
         altura_plataforma = 25
 
-        x_plataforma = random.randint(
-            0,
-            self.IsLargura - largura_plataforma
+        x_plataforma = LocalPouso.posicao_aleatoria(
+            self.IsLargura,
+            largura_plataforma
         )
-        y_plataforma = self.IsAltura - altura_plataforma
+        y_plataforma = self.IsAltura - altura_plataforma - 20
 
         self.local_pouso = LocalPouso(
             x_plataforma,
@@ -40,25 +39,14 @@ class Gameplay(Tela):
         self.input = Input(self.janela)
         self.hud = HUD(self.canvas)
 
-    def _posicao_aleatoria(self, largura, altura):
-        limite_x = self.IsLargura - largura
-        limite_y = self.IsAltura - altura
-
-        if limite_x < 0 or limite_y < 0:
-            raise ValueError(
-                "O objeto é maior que a área disponível da tela."
-            )
-
-        return (
-            random.randint(0, limite_x),
-            random.randint(0, limite_y)
-        )
-
     def _criar_coletaveis(self, quantidade):
         coletaveis = []
 
         while len(coletaveis) < quantidade:
-            x, y = self._posicao_aleatoria(25, 25)
+            x, y = Coletavel.posicao_aleatoria(
+                self.IsLargura,
+                self.IsAltura
+            )
 
             if any(
                 x < coletavel.x + coletavel.largura
@@ -72,11 +60,6 @@ class Gameplay(Tela):
             coletaveis.append(Coletavel(x, y))
 
         return coletaveis
-
-    def _posicao_aleatoria(self, largura, altura):
-        x = random.randint(0, self.IsLargura - largura)
-        y = random.randint(0, self.IsAltura - altura)
-        return x, y
 
     def atualizar(self):
         self.foguete.atualizar(
