@@ -14,11 +14,6 @@ class Gameplay(Tela):
             largura=largura
         )
 
-        self.foguete = Foguete(
-            self.IsLargura // 2,
-            self.IsAltura // 2
-        )
-
         largura_plataforma = 400
         altura_plataforma = 25
 
@@ -33,6 +28,18 @@ class Gameplay(Tela):
             y_plataforma,
             largura_plataforma,
             altura_plataforma
+        )
+
+        self.foguete = Foguete(
+            self.local_pouso.x + (
+                self.local_pouso.largura - 50
+            ) / 2,
+            self.local_pouso.y - 50
+        )
+
+        self.foguete.carregar_sprite(
+            self.janela,
+            "sprites/foguete.png"
         )
 
         self.coletaveis = self._criar_coletaveis(3)
@@ -87,13 +94,21 @@ class Gameplay(Tela):
     def desenhar(self):
         super().desenhar()
 
-        self.canvas.create_rectangle(
-            self.foguete.x,
-            self.foguete.y,
-            self.foguete.x + self.foguete.largura,
-            self.foguete.y + self.foguete.altura,
-            fill="white"
-        )
+        if self.foguete.sprite is not None:
+            self.canvas.create_image(
+                self.foguete.x,
+                self.foguete.y,
+                anchor="nw",
+                image=self.foguete.sprite
+            )
+        else:
+            self.canvas.create_rectangle(
+                self.foguete.x,
+                self.foguete.y,
+                self.foguete.x + self.foguete.largura,
+                self.foguete.y + self.foguete.altura,
+                fill="white"
+            )
 
         self.canvas.create_rectangle(
             self.local_pouso.x,
