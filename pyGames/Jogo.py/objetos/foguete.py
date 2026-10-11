@@ -6,6 +6,7 @@ from lib.Colisao import place_meeting
 class Foguete:
     GRAVIDADE = 9.8
     PIXELS_POR_METRO = 50
+    VELOCIDADE_VERTICAL_MAX = 600  # pixels por segundo
 
     def __init__(self, x, y):
         self.x = x
@@ -29,17 +30,15 @@ class Foguete:
             master=janela,
             file=caminho
         )
+        # A hitbox acompanha exatamente o tamanho renderizado do sprite.
+        self.largura = self.sprite.width()
+        self.altura = self.sprite.height()
 
     def verificar_coleta(self, coletavel):
         if coletavel.destruido:
             return
 
-        if place_meeting(
-            self,
-            self.x,
-            self.y,
-            coletavel
-        ):
+        if place_meeting(self, self.x, self.y, coletavel):
             self.pontos += coletavel.valor
             coletavel.destruido = True
 
@@ -59,38 +58,31 @@ class Foguete:
         if input.pressionada("Down"):
             self.y += 200 * dT
 
-        self.velocidade_y += (
-            self.GRAVIDADE
-            * self.PIXELS_POR_METRO
-            * dT
+        # A gravidade altera a velocidade, mas a velocidade de queda tem limite.
+        self.velocidade_y = min(
+            self.velocidade_y + self.GRAVIDADE * self.PIXELS_POR_METRO * dT,
+            self.VELOCIDADE_VERTICAL_MAX
         )
-
         self.y += self.velocidade_y * dT
 
-        # Wrap horizontal
+        # Wrap horizontal, considerando a hitbox real do sprite.
         if self.x + self.largura < 0:
             self.x = largura_tela
-
         elif self.x > largura_tela:
             self.x = -self.largura
 
-        # Wrap vertical
+        # Wrap vertical, considerando a hitbox real do sprite.
         if self.y + self.altura < 0:
             self.y = altura_tela
-
         elif self.y > altura_tela:
             self.y = -self.altura
 
         self.colidindo = False
 
-        if local_pouso is not None:
-            if place_meeting(
-                self,
-                self.x,
-                self.y,
-                local_pouso
-            ):
-                self.x = x_anterior
-                self.y = y_anterior
-                self.velocidade_y = 0
-                self.colidindo = True
+        if local_pouso is not None and place_meeting(
+            self, self.x, self.y, local_pouso
+        ):
+            self.x = x_anterior
+            self.y = y_anterior
+            self.velocidade_y = 0
+            self.colidindo = True
