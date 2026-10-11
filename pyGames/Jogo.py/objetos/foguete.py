@@ -11,13 +11,14 @@ except ImportError:
 
 
 class Foguete:
-    GRAVIDADE = 9.8
+    # Constantes físicas (SI)
+    GRAVIDADE = 9.8  # m/s²
     PIXELS_POR_METRO = 50
-    VELOCIDADE_MAXIMA = 600  # pixels por segundo
+    VELOCIDADE_VERTICAL_MAX = 600  # px/s; limite para a queda no jogo
     MASSA_SECA_KG = 100_000  # 100 toneladas
     COMBUSTIVEL_INICIAL_KG = 100_000  # 100 toneladas
     FORCA_PROPULSAO_N = 2_000_000  # 2 x 10^6 N
-    FRACAO_COMBUSTIVEL_POR_FRAME = 0.001
+    FRACAO_COMBUSTIVEL_POR_FRAME = 0.001  # 0,1% do combustível inicial
     ANGULO_INCLINACAO_GRAUS = 30
 
     def __init__(self, x, y):
@@ -28,10 +29,10 @@ class Foguete:
         self.largura_original = 50
         self.altura_original = 50
 
-        self.velocidade_x = 0.0
-        self.velocidade_y = 0.0
-        self.aceleracao_x = 0.0
-        self.aceleracao_y = 0.0
+        self.velocidade_x = 0.0  # px/s
+        self.velocidade_y = 0.0  # px/s; positivo = para baixo
+        self.aceleracao_x = 0.0  # m/s²
+        self.aceleracao_y = self.GRAVIDADE  # m/s²
 
         self.massa_seca = self.MASSA_SECA_KG
         self.combustivel_inicial = self.COMBUSTIVEL_INICIAL_KG
@@ -69,6 +70,7 @@ class Foguete:
             self.altura = self.altura_original
             return
 
+        # Preserva o centro de massa enquanto muda a imagem/caixa delimitadora.
         centro_x = self.x + self.largura / 2
         centro_y = self.y + self.altura / 2
         imagem = self._sprite_original.rotate(
@@ -106,35 +108,42 @@ class Foguete:
             self.angulo = 0
         self._atualizar_rotacao_sprite()
 
-        massa_anterior = self.massa_seca + self.combustivel
-        self.massa = massa_anterior
-        self.aceleracao_x = 0.0
-        self.aceleracao_y = self.GRAVIDADE
+        # O peso é uma FORÇA: P = m*g. Não somamos g diretamente a uma força.
+        self.massa = self.massa_seca + self.combustivel
+        forca_gravidade = self.massa * self.GRAVIDADE  # N, para baixo
+        forca_x = 0.0
+        forca_y_resultante = forca_gravidade
 
         if input.pressionada("space") and self.combustivel > 0:
             consumo = min(
                 self.combustivel,
                 self.combustivel_inicial * self.FRACAO_COMBUSTIVEL_POR_FRAME
             )
-            self.combustivel -= consumo
+            self.combustivel = max(0.0, self.combustivel - consumo)
             self.massa = self.massa_seca + self.combustivel
 
             angulo_rad = math.radians(self.angulo)
-            forca_x = self.FORCA_PROPULSAO_N * math.sin(angulo_rad)
-            forca_y = -self.FORCA_PROPULSAO_N * math.cos(angulo_rad)
-            self.aceleracao_x = forca_x / self.massa
-            self.aceleracao_y = self.GRAVIDADE + forca_y / self.massa
+            # Empuxo aponta para o nariz: vertical para cima quando angulo=0.
+            forca_empuxo_x = self.FORCA_PROPULSAO_N * math.sin(angulo_rad)
+            forca_empuxo_y = self.FORCA_PROPULSAO_N * math.cos(angulo_rad)
+            forca_x = forca_empuxo_x
+            forca_y_resultante = self.massa * self.GRAVIDADE - forca_empuxo_y
 
+        # F = m*a. Calculamos aceleração a partir da força resultante.
+        self.aceleracao_x = forca_x / self.massa
+        self.aceleracao_y = forca_y_resultante / self.massa
+
+        # Converte m/s² para px/s²; Y positivo na tela aponta para baixo.
         self.velocidade_x += self.aceleracao_x * self.PIXELS_POR_METRO * dT
         self.velocidade_y += self.aceleracao_y * self.PIXELS_POR_METRO * dT
-        self.velocidade_x = max(
-            -self.VELOCIDADE_MAXIMA,
-            min(self.velocidade_x, self.VELOCIDADE_MAXIMA)
-        )
-        self.velocidade_y = max(
-            -self.VELOCIDADE_MAXIMA,
-            min(self.velocidade_y, self.VELOCIDADE_MAXIMA)
-        )
+
+        # Limita a velocidade nos dois eixos para impedir valores sem controle.
+        self.velocidade_x = max(-self.VELOCIDADE_VERTICAL_MAX, min(
+            self.velocidade_x, self.VELOCIDADE_VERTICAL_MAX
+        ))
+        self.velocidade_y = max(-self.VELOCIDADE_VERTICAL_MAX, min(
+            self.velocidade_y, self.VELOCIDADE_VERTICAL_MAX
+        ))
 
         self.x += self.velocidade_x * dT
         self.y += self.velocidade_y * dT
