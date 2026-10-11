@@ -1,4 +1,5 @@
 from pathlib import Path
+import tkinter as tk
 
 from .Tela import Tela
 from .hud import HUD
@@ -14,6 +15,12 @@ class Gameplay(Tela):
             titulo=titulo,
             altura=altura,
             largura=largura
+        )
+
+        self.pasta_sprites = Path(__file__).resolve().parent.parent / "sprites"
+        self.background = tk.PhotoImage(
+            master=self.janela,
+            file=str(self.pasta_sprites / "background.png")
         )
 
         largura_plataforma = 400
@@ -39,14 +46,9 @@ class Gameplay(Tela):
             self.local_pouso.y - 50
         )
 
-        caminho_sprite = (
-            Path(__file__).resolve().parent.parent
-            / "sprites"
-            / "foguete.png"
-        )
         self.foguete.carregar_sprite(
             self.janela,
-            str(caminho_sprite)
+            str(self.pasta_sprites / "foguete.png")
         )
 
         self.coletaveis = self._criar_coletaveis(3)
@@ -100,6 +102,13 @@ class Gameplay(Tela):
 
     def desenhar(self):
         super().desenhar()
+
+        # O cenário é desenhado primeiro para ficar atrás dos objetos.
+        self.canvas.create_image(
+            0, 0,
+            anchor="nw",
+            image=self.background
+        )
 
         if self.foguete.sprite is not None:
             self.canvas.create_image(
