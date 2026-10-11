@@ -93,9 +93,8 @@ class Foguete:
             coletavel.destruido = True
 
     def atualizar(self, input, dT, largura_tela, altura_tela, local_pouso=None):
-        if not self.esta_no_ar:
-            return
-
+        # A colisão com a plataforma bloqueia apenas o movimento contra ela.
+        # Não desativamos a atualização: o jogador continua podendo se afastar.
         self.tempo_no_ar += dT
         x_anterior, y_anterior = self.x, self.y
 
@@ -159,12 +158,43 @@ class Foguete:
         if local_pouso is not None and place_meeting(
             self, self.x, self.y, local_pouso
         ):
-            self.x, self.y = x_anterior, y_anterior
-            self.velocidade_x = self.velocidade_y = 0.0
+            # Resolve cada eixo separadamente. Se houver sobreposição, tenta
+            # manter o movimento horizontal e bloquear só o vertical; se a
+            # colisão veio do movimento horizontal, bloqueia só esse eixo.
+            x_atual, y_atual = self.x, self.y
+
+            self.x = x_atual
+            self.y = y_anterior
+            colisao_vertical = place_meeting(
+                self, self.x, self.y, local_pouso
+            )
+
+            self.x = x_anterior
+            self.y = y_atual
+            colisao_horizontal = place_meeting(
+                self, self.x, self.y, local_pouso
+            )
+
+            if colisao_vertical:
+                self.y = y_anterior
+                self.velocidade_y = 0.0
+            elif colisao_horizontal:
+                self.x = x_anterior
+                self.velocidade_x = 0.0
+            else:
+                # Caso diagonal/ambíguo: bloqueia apenas o eixo de maior
+                # deslocamento neste frame, em vez de zerar a posição toda.
+                deslocamento_x = abs(x_atual - x_anterior)
+                deslocamento_y = abs(y_atual - y_anterior)
+                if deslocamento_x >= deslocamento_y:
+                    self.x = x_anterior
+                    self.velocidade_x = 0.0
+                    self.y = y_atual
+                else:
+                    self.y = y_anterior
+                    self.velocidade_y = 0.0
+
             self.colidindo = True
-            self.esta_no_ar = False
-            self.pontos = int(self.tempo_no_ar)
-            return
 
         if self.y + self.altura >= altura_tela:
             self.y = altura_tela - self.altura
