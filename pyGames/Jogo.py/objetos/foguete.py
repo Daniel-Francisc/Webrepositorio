@@ -11,14 +11,14 @@ except ImportError:
 
 
 class Foguete:
-    # Constantes físicas (SI)
-    GRAVIDADE = 9.8  # m/s²
+    GRAVIDADE = 9.8
     PIXELS_POR_METRO = 50
-    VELOCIDADE_VERTICAL_MAX = 600  # px/s; limite para a queda no jogo
-    MASSA_SECA_KG = 100_000  # 100 toneladas
-    COMBUSTIVEL_INICIAL_KG = 100_000  # 100 toneladas
-    FORCA_PROPULSAO_N = 2_000_000  # 2 x 10^6 N
-    FRACAO_COMBUSTIVEL_POR_FRAME = 0.001  # 0,1% do combustível inicial
+    VELOCIDADE_VERTICAL_MAX = 600
+    VELOCIDADE_CONTROLE = 200  # px/s, comportamento preservado da main
+    MASSA_SECA_KG = 100_000
+    COMBUSTIVEL_INICIAL_KG = 100_000
+    FORCA_PROPULSAO_N = 2_000_000
+    FRACAO_COMBUSTIVEL_POR_FRAME = 0.001
     ANGULO_INCLINACAO_GRAUS = 30
 
     def __init__(self, x, y):
@@ -29,10 +29,10 @@ class Foguete:
         self.largura_original = 50
         self.altura_original = 50
 
-        self.velocidade_x = 0.0  # px/s
-        self.velocidade_y = 0.0  # px/s; positivo = para baixo
-        self.aceleracao_x = 0.0  # m/s²
-        self.aceleracao_y = self.GRAVIDADE  # m/s²
+        self.velocidade_x = 0.0
+        self.velocidade_y = 0.0
+        self.aceleracao_x = 0.0
+        self.aceleracao_y = self.GRAVIDADE
 
         self.massa_seca = self.MASSA_SECA_KG
         self.combustivel_inicial = self.COMBUSTIVEL_INICIAL_KG
@@ -70,7 +70,6 @@ class Foguete:
             self.altura = self.altura_original
             return
 
-        # Preserva o centro de massa enquanto muda a imagem/caixa delimitadora.
         centro_x = self.x + self.largura / 2
         centro_y = self.y + self.altura / 2
         imagem = self._sprite_original.rotate(
@@ -100,17 +99,27 @@ class Foguete:
         self.tempo_no_ar += dT
         x_anterior, y_anterior = self.x, self.y
 
+        # Mantém o controle direto das setas que funcionava na main.
+        # Esquerda/direita também inclinam o nariz para orientar o empuxo.
         if input.pressionada("Left"):
+            self.x -= self.VELOCIDADE_CONTROLE * dT
             self.angulo = -self.ANGULO_INCLINACAO_GRAUS
         elif input.pressionada("Right"):
+            self.x += self.VELOCIDADE_CONTROLE * dT
             self.angulo = self.ANGULO_INCLINACAO_GRAUS
         else:
             self.angulo = 0
+
+        if input.pressionada("Up"):
+            self.y -= self.VELOCIDADE_CONTROLE * dT
+        if input.pressionada("Down"):
+            self.y += self.VELOCIDADE_CONTROLE * dT
+
         self._atualizar_rotacao_sprite()
 
-        # O peso é uma FORÇA: P = m*g. Não somamos g diretamente a uma força.
+        # Calcula a gravidade como força (peso = massa * g).
         self.massa = self.massa_seca + self.combustivel
-        forca_gravidade = self.massa * self.GRAVIDADE  # N, para baixo
+        forca_gravidade = self.massa * self.GRAVIDADE
         forca_x = 0.0
         forca_y_resultante = forca_gravidade
 
@@ -123,31 +132,24 @@ class Foguete:
             self.massa = self.massa_seca + self.combustivel
 
             angulo_rad = math.radians(self.angulo)
-            # Empuxo aponta para o nariz: vertical para cima quando angulo=0.
-            forca_empuxo_x = self.FORCA_PROPULSAO_N * math.sin(angulo_rad)
+            forca_x = self.FORCA_PROPULSAO_N * math.sin(angulo_rad)
             forca_empuxo_y = self.FORCA_PROPULSAO_N * math.cos(angulo_rad)
-            forca_x = forca_empuxo_x
             forca_y_resultante = self.massa * self.GRAVIDADE - forca_empuxo_y
 
-        # F = m*a. Calculamos aceleração a partir da força resultante.
         self.aceleracao_x = forca_x / self.massa
         self.aceleracao_y = forca_y_resultante / self.massa
 
-        # Converte m/s² para px/s²; Y positivo na tela aponta para baixo.
         self.velocidade_x += self.aceleracao_x * self.PIXELS_POR_METRO * dT
         self.velocidade_y += self.aceleracao_y * self.PIXELS_POR_METRO * dT
 
-        # Limita a velocidade nos dois eixos para impedir valores sem controle.
-        self.velocidade_x = max(-self.VELOCIDADE_VERTICAL_MAX, min(
-            self.velocidade_x, self.VELOCIDADE_VERTICAL_MAX
-        ))
-        self.velocidade_y = max(-self.VELOCIDADE_VERTICAL_MAX, min(
-            self.velocidade_y, self.VELOCIDADE_VERTICAL_MAX
-        ))
+        limite = self.VELOCIDADE_VERTICAL_MAX
+        self.velocidade_x = max(-limite, min(self.velocidade_x, limite))
+        self.velocidade_y = max(-limite, min(self.velocidade_y, limite))
 
         self.x += self.velocidade_x * dT
         self.y += self.velocidade_y * dT
 
+        # Mantém o wrap horizontal existente na main.
         if self.x + self.largura < 0:
             self.x = largura_tela
         elif self.x > largura_tela:
@@ -164,7 +166,7 @@ class Foguete:
             self.pontos = int(self.tempo_no_ar)
             return
 
-        if self.y >= altura_tela:
+        if self.y + self.altura >= altura_tela:
             self.y = altura_tela - self.altura
             self.velocidade_y = 0.0
             self.esta_no_ar = False
