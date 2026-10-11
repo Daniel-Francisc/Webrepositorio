@@ -25,30 +25,21 @@ class Gameplay(Tela):
 
         largura_plataforma = 400
         altura_plataforma = 25
-
         x_plataforma = LocalPouso.posicao_aleatoria(
-            self.IsLargura,
-            largura_plataforma
+            self.IsLargura, largura_plataforma
         )
         y_plataforma = self.IsAltura - altura_plataforma - 100
-
         self.local_pouso = LocalPouso(
-            x_plataforma,
-            y_plataforma,
-            largura_plataforma,
-            altura_plataforma
+            x_plataforma, y_plataforma, largura_plataforma, altura_plataforma
         )
 
         self.foguete = Foguete(0, 0)
         self.foguete.carregar_sprite(
-            self.janela,
-            str(self.pasta_sprites / "foguete.png")
+            self.janela, str(self.pasta_sprites / "foguete.png")
         )
-        # Centraliza o tamanho real do sprite na plataforma.
-        self.foguete.x = self.local_pouso.x + (
-            self.local_pouso.largura - self.foguete.largura
-        ) / 2
-        self.foguete.y = self.local_pouso.y - self.foguete.altura
+        self.foguete.x = (self.IsLargura - self.foguete.largura) / 2
+        # Começa no ar, como pede o enunciado (sem começar sobre a plataforma).
+        self.foguete.y = max(20, self.IsAltura * 0.25)
 
         self.coletaveis = self._criar_coletaveis(3)
         self.input = Input(self.janela)
@@ -56,36 +47,25 @@ class Gameplay(Tela):
 
     def _criar_coletaveis(self, quantidade):
         coletaveis = []
-
         while len(coletaveis) < quantidade:
             x, y = Coletavel.posicao_aleatoria(
-                self.IsLargura,
-                self.IsAltura,
-                self.local_pouso.y
+                self.IsLargura, self.IsAltura, self.local_pouso.y
             )
-
             if any(
-                x < coletavel.x + coletavel.largura
-                and x + 25 > coletavel.x
-                and y < coletavel.y + coletavel.altura
-                and y + 25 > coletavel.y
-                for coletavel in coletaveis
+                x < item.x + item.largura
+                and x + 25 > item.x
+                and y < item.y + item.altura
+                and y + 25 > item.y
+                for item in coletaveis
             ):
                 continue
-
             coletaveis.append(Coletavel(x, y))
-
         return coletaveis
 
     def atualizar(self):
         self.foguete.atualizar(
-            self.input,
-            1 / 60,
-            self.IsLargura,
-            self.IsAltura,
-            self.local_pouso
+            self.input, 1 / 60, self.IsLargura, self.IsAltura, self.local_pouso
         )
-
         for coletavel in self.coletaveis:
             self.foguete.verificar_coleta(coletavel)
 
@@ -95,43 +75,37 @@ class Gameplay(Tela):
             "vx": self.foguete.velocidade_x,
             "vy": self.foguete.velocidade_y,
             "massa": self.foguete.massa,
+            "combustivel": self.foguete.combustivel,
             "energia": self.foguete.energia,
-            "pontos": self.foguete.pontos
+            "pontos": self.foguete.pontos,
+            "tempo": self.foguete.tempo_no_ar,
+            "voando": self.foguete.esta_no_ar
         })
 
     def desenhar(self):
         super().desenhar()
 
-        # Repete o background para preencher toda a área do jogo.
         largura_fundo = self.background.width()
         altura_fundo = self.background.height()
         for x in range(0, self.IsLargura, largura_fundo):
             for y in range(0, self.IsAltura, altura_fundo):
-                self.canvas.create_image(
-                    x, y,
-                    anchor="nw",
-                    image=self.background
-                )
+                self.canvas.create_image(x, y, anchor="nw", image=self.background)
 
-        if self.foguete.sprite is not None:
+        sprite = self.foguete._sprite_rotacionado or self.foguete.sprite
+        if sprite is not None:
             self.canvas.create_image(
-                self.foguete.x,
-                self.foguete.y,
-                anchor="nw",
-                image=self.foguete.sprite
+                self.foguete.x, self.foguete.y, anchor="nw", image=sprite
             )
         else:
             self.canvas.create_rectangle(
-                self.foguete.x,
-                self.foguete.y,
+                self.foguete.x, self.foguete.y,
                 self.foguete.x + self.foguete.largura,
                 self.foguete.y + self.foguete.altura,
                 fill="white"
             )
 
         self.canvas.create_rectangle(
-            self.local_pouso.x,
-            self.local_pouso.y,
+            self.local_pouso.x, self.local_pouso.y,
             self.local_pouso.x + self.local_pouso.largura,
             self.local_pouso.y + self.local_pouso.altura,
             fill="gray"
@@ -140,10 +114,8 @@ class Gameplay(Tela):
         for coletavel in self.coletaveis:
             if coletavel.destruido:
                 continue
-
             self.canvas.create_rectangle(
-                coletavel.x,
-                coletavel.y,
+                coletavel.x, coletavel.y,
                 coletavel.x + coletavel.largura,
                 coletavel.y + coletavel.altura,
                 fill="yellow"
