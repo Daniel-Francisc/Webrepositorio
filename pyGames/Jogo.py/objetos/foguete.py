@@ -25,9 +25,11 @@ class Foguete:
         self.y = y
         self.largura = 50
         self.altura = 50
+        self.largura_original = 50
+        self.altura_original = 50
 
-        self.velocidade_x = 0.0  # pixels/s
-        self.velocidade_y = 0.0  # pixels/s
+        self.velocidade_x = 0.0
+        self.velocidade_y = 0.0
         self.aceleracao_x = 0.0
         self.aceleracao_y = 0.0
 
@@ -45,38 +47,46 @@ class Foguete:
         self.sprite = None
         self._sprite_original = None
         self._sprite_rotacionado = None
+        self._janela = None
 
     def carregar_sprite(self, janela, caminho):
+        self._janela = janela
         self.sprite = tk.PhotoImage(master=janela, file=caminho)
-        self.largura = self.sprite.width()
-        self.altura = self.sprite.height()
+        self.largura_original = self.sprite.width()
+        self.altura_original = self.sprite.height()
+        self.largura = self.largura_original
+        self.altura = self.altura_original
 
         if Image is not None and ImageTk is not None:
             self._sprite_original = Image.open(caminho).convert("RGBA")
             self._sprite_rotacionado = ImageTk.PhotoImage(
-                self._sprite_original,
-                master=janela
+                self._sprite_original, master=janela
             )
 
     def _atualizar_rotacao_sprite(self):
         if self._sprite_original is None or ImageTk is None:
+            self.largura = self.largura_original
+            self.altura = self.altura_original
             return
+
+        centro_x = self.x + self.largura / 2
+        centro_y = self.y + self.altura / 2
         imagem = self._sprite_original.rotate(
-            -self.angulo,
+            self.angulo,
             resample=Image.Resampling.BICUBIC,
             expand=True
         )
         self._sprite_rotacionado = ImageTk.PhotoImage(
-            imagem,
-            master=self.sprite.master
+            imagem, master=self._janela
         )
         self.largura = imagem.width
         self.altura = imagem.height
+        self.x = centro_x - self.largura / 2
+        self.y = centro_y - self.altura / 2
 
     def verificar_coleta(self, coletavel):
         if coletavel.destruido:
             return
-
         if place_meeting(self, self.x, self.y, coletavel):
             self.pontos += coletavel.valor
             coletavel.destruido = True
@@ -86,11 +96,8 @@ class Foguete:
             return
 
         self.tempo_no_ar += dT
-        x_anterior = self.x
-        y_anterior = self.y
+        x_anterior, y_anterior = self.x, self.y
 
-        # Inclinar para a esquerda/direita muda o ângulo do foguete
-        # e a direção do vetor de empuxo, sem teletransporte lateral.
         if input.pressionada("Left"):
             self.angulo = -self.ANGULO_INCLINACAO_GRAUS
         elif input.pressionada("Right"):
@@ -100,8 +107,9 @@ class Foguete:
         self._atualizar_rotacao_sprite()
 
         massa_anterior = self.massa_seca + self.combustivel
-        forca_x = 0.0
-        forca_y = massa_anterior * self.GRAVIDADE
+        self.massa = massa_anterior
+        self.aceleracao_x = 0.0
+        self.aceleracao_y = self.GRAVIDADE
 
         if input.pressionada("space") and self.combustivel > 0:
             consumo = min(
@@ -109,28 +117,24 @@ class Foguete:
                 self.combustivel_inicial * self.FRACAO_COMBUSTIVEL_POR_FRAME
             )
             self.combustivel -= consumo
-            massa_atual = self.massa_seca + self.combustivel
+            self.massa = self.massa_seca + self.combustivel
 
             angulo_rad = math.radians(self.angulo)
             forca_x = self.FORCA_PROPULSAO_N * math.sin(angulo_rad)
-            # Tkinter tem Y positivo para baixo; empuxo vertical aponta para cima.
-            forca_y = (
-                massa_atual * self.GRAVIDADE
-                - self.FORCA_PROPULSAO_N * math.cos(angulo_rad)
-            )
-            self.massa = massa_atual
-            self.aceleracao_x = forca_x / massa_atual
-            self.aceleracao_y = forca_y / massa_atual
-        else:
-            self.massa = massa_anterior
-            self.aceleracao_x = 0.0
-            self.aceleracao_y = self.GRAVIDADE
+            forca_y = -self.FORCA_PROPULSAO_N * math.cos(angulo_rad)
+            self.aceleracao_x = forca_x / self.massa
+            self.aceleracao_y = self.GRAVIDADE + forca_y / self.massa
 
-        # Conversão de aceleração física (m/s²) para pixels/s².
         self.velocidade_x += self.aceleracao_x * self.PIXELS_POR_METRO * dT
         self.velocidade_y += self.aceleracao_y * self.PIXELS_POR_METRO * dT
-        self.velocidade_x = max(-self.VELOCIDADE_MAXIMA, min(self.velocidade_x, self.VELOCIDADE_MAXIMA))
-        self.velocidade_y = max(-self.VELOCIDADE_MAXIMA, min(self.velocidade_y, self.VELOCIDADE_MAXIMA))
+        self.velocidade_x = max(
+            -self.VELOCIDADE_MAXIMA,
+            min(self.velocidade_x, self.VELOCIDADE_MAXIMA)
+        )
+        self.velocidade_y = max(
+            -self.VELOCIDADE_MAXIMA,
+            min(self.velocidade_y, self.VELOCIDADE_MAXIMA)
+        )
 
         self.x += self.velocidade_x * dT
         self.y += self.velocidade_y * dT
@@ -140,22 +144,18 @@ class Foguete:
         elif self.x > largura_tela:
             self.x = -self.largura
 
-        # O foguete não reaparece por cima ao cruzar o limite inferior:
-        # tocar a área de pouso encerra o tempo de voo.
+        self.colidindo = False
         if local_pouso is not None and place_meeting(
             self, self.x, self.y, local_pouso
         ):
-            self.x = x_anterior
-            self.y = y_anterior
-            self.velocidade_x = 0.0
-            self.velocidade_y = 0.0
+            self.x, self.y = x_anterior, y_anterior
+            self.velocidade_x = self.velocidade_y = 0.0
             self.colidindo = True
             self.esta_no_ar = False
             self.pontos = int(self.tempo_no_ar)
             return
 
-        self.colidindo = False
-        if self.y > altura_tela:
+        if self.y >= altura_tela:
             self.y = altura_tela - self.altura
             self.velocidade_y = 0.0
             self.esta_no_ar = False
