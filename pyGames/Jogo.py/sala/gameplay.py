@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .Tela import Tela
 from .hud import HUD
 from objetos.foguete import Foguete
@@ -37,9 +39,14 @@ class Gameplay(Tela):
             self.local_pouso.y - 50
         )
 
+        caminho_sprite = (
+            Path(__file__).resolve().parent.parent
+            / "sprites"
+            / "foguete.png"
+        )
         self.foguete.carregar_sprite(
             self.janela,
-            "sprites/foguete.png"
+            str(caminho_sprite)
         )
 
         self.coletaveis = self._criar_coletaveis(3)
