@@ -158,20 +158,17 @@ class Foguete:
         if local_pouso is not None and place_meeting(
             self, self.x, self.y, local_pouso
         ):
-            # Resolve cada eixo separadamente. Se houver sobreposição, tenta
-            # manter o movimento horizontal e bloquear só o vertical; se a
-            # colisão veio do movimento horizontal, bloqueia só esse eixo.
-            x_atual, y_atual = self.x, self.y
+            # Testa cada eixo isoladamente para identificar qual movimento
+            # causou a colisão e bloquear somente esse eixo.
+            x_proposto, y_proposto = self.x, self.y
 
-            self.x = x_atual
-            self.y = y_anterior
-            colisao_vertical = place_meeting(
+            self.x, self.y = x_proposto, y_anterior
+            colisao_horizontal = place_meeting(
                 self, self.x, self.y, local_pouso
             )
 
-            self.x = x_anterior
-            self.y = y_atual
-            colisao_horizontal = place_meeting(
+            self.x, self.y = x_anterior, y_proposto
+            colisao_vertical = place_meeting(
                 self, self.x, self.y, local_pouso
             )
 
@@ -182,17 +179,15 @@ class Foguete:
                 self.x = x_anterior
                 self.velocidade_x = 0.0
             else:
-                # Caso diagonal/ambíguo: bloqueia apenas o eixo de maior
-                # deslocamento neste frame, em vez de zerar a posição toda.
-                deslocamento_x = abs(x_atual - x_anterior)
-                deslocamento_y = abs(y_atual - y_anterior)
-                if deslocamento_x >= deslocamento_y:
-                    self.x = x_anterior
-                    self.velocidade_x = 0.0
-                    self.y = y_atual
-                else:
+                # Colisão diagonal: bloqueia só o eixo de maior deslocamento.
+                deslocamento_x = abs(x_proposto - x_anterior)
+                deslocamento_y = abs(y_proposto - y_anterior)
+                if deslocamento_y >= deslocamento_x:
                     self.y = y_anterior
                     self.velocidade_y = 0.0
+                else:
+                    self.x = x_anterior
+                    self.velocidade_x = 0.0
 
             self.colidindo = True
 
