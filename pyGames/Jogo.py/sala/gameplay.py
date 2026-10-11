@@ -39,17 +39,16 @@ class Gameplay(Tela):
             altura_plataforma
         )
 
-        self.foguete = Foguete(
-            self.local_pouso.x + (
-                self.local_pouso.largura - 50
-            ) / 2,
-            self.local_pouso.y - 50
-        )
-
+        self.foguete = Foguete(0, 0)
         self.foguete.carregar_sprite(
             self.janela,
             str(self.pasta_sprites / "foguete.png")
         )
+        # Centraliza o tamanho real do sprite na plataforma.
+        self.foguete.x = self.local_pouso.x + (
+            self.local_pouso.largura - self.foguete.largura
+        ) / 2
+        self.foguete.y = self.local_pouso.y - self.foguete.altura
 
         self.coletaveis = self._criar_coletaveis(3)
         self.input = Input(self.janela)
@@ -103,12 +102,16 @@ class Gameplay(Tela):
     def desenhar(self):
         super().desenhar()
 
-        # O cenário é desenhado primeiro para ficar atrás dos objetos.
-        self.canvas.create_image(
-            0, 0,
-            anchor="nw",
-            image=self.background
-        )
+        # Repete o background para preencher toda a área do jogo.
+        largura_fundo = self.background.width()
+        altura_fundo = self.background.height()
+        for x in range(0, self.IsLargura, largura_fundo):
+            for y in range(0, self.IsAltura, altura_fundo):
+                self.canvas.create_image(
+                    x, y,
+                    anchor="nw",
+                    image=self.background
+                )
 
         if self.foguete.sprite is not None:
             self.canvas.create_image(
