@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import tkinter as tk
+
 from .Tela import Tela
 from .hud import HUD
 from objetos.foguete import Foguete
@@ -13,6 +17,8 @@ class Gameplay(Tela):
             altura=altura,
             largura=largura
         )
+
+        self.pasta_sprites = Path(__file__).resolve().parent.parent / "sprites"
 
         largura_plataforma = 400
         altura_plataforma = 25
@@ -30,17 +36,26 @@ class Gameplay(Tela):
             altura_plataforma
         )
 
-        self.foguete = Foguete(
-            self.local_pouso.x + (
-                self.local_pouso.largura - 50
-            ) / 2,
-            self.local_pouso.y - 50
-        )
-
+        self.foguete = Foguete(0, 0)
         self.foguete.carregar_sprite(
             self.janela,
-            "sprites/foguete.png"
+            str(self.pasta_sprites / "foguete.png")
         )
+
+        self.foguete.x = self.local_pouso.x + (
+            self.local_pouso.largura - self.foguete.largura
+        ) / 2
+        self.foguete.y = self.local_pouso.y - self.foguete.altura
+
+        self.sprite_nuvem = tk.PhotoImage(
+            master=self.janela,
+            file=str(self.pasta_sprites / "nuvem.png")
+        )
+        self.nuvens = [
+            (self.IsLargura * 0.15, self.IsAltura * 0.18),
+            (self.IsLargura * 0.62, self.IsAltura * 0.28),
+            (self.IsLargura * 0.38, self.IsAltura * 0.48)
+        ]
 
         self.coletaveis = self._criar_coletaveis(3)
         self.input = Input(self.janela)
@@ -93,6 +108,14 @@ class Gameplay(Tela):
 
     def desenhar(self):
         super().desenhar()
+
+        for x, y in self.nuvens:
+            self.canvas.create_image(
+                x,
+                y,
+                anchor="nw",
+                image=self.sprite_nuvem
+            )
 
         if self.foguete.sprite is not None:
             self.canvas.create_image(
